@@ -48,16 +48,11 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
   }
 });
 
-// Receive captures from content scripts
+// Receive messages from popup and content scripts
 chrome.runtime.onMessage.addListener((msg, sender) => {
-  if (msg.type === "get-stats") {
-    // Return stats to popup
-    chrome.storage.session.get("captureStats", (stored) => {
-      const stats = stored.captureStats || { pages: {}, sessionStart: Date.now() };
-      if (msg.callback) {
-        // Use sendResponse pattern
-      }
-    });
+  // Handle "Capture this page now" from popup
+  if (msg.type === "capture-page-request") {
+    capturePageDirectly(msg.tabId, msg.url, msg.title);
     return;
   }
 
@@ -117,6 +112,54 @@ async function trackCapture(url, title, domain, wordCount, trigger) {
   stats.totalCaptures += 1;
 
   await chrome.storage.session.set({ captureStats: stats });
+}
+
+/**
+ * Capture page content directly using chrome.scripting.executeScript.
+ * Works even when content script isn't injected.
+ */
+async function capturePageDirectly(tabId, url, title) {
+  try {
+    const results = await chrome.scripting.executeScript({
+      target: { tabId: tabId },
+      func: () => {
+        const main =
+          document.querySelector("article") ||
+          document.querySelector("[role='main']") ||
+          document.querySelector("main") ||
+          document.body;
+        return (main.innerText || "").trim();
+      },
+    });
+
+    const text = results && results[0] && results[0].result;
+    if (!text || text.length < 10) {
+      console.warn("[tilth-capture] No content found on page");
+      return;
+    }
+
+    let domain = "";
+    try {
+      domain = new URL(url).hostname;
+    } catch {
+      domain = "unknown";
+    }
+
+    const fullText = [
+      `Source: ${url}`,
+      `Title: ${title}`,
+      `Captured: ${new Date().toISOString()} (page)`,
+      "",
+      text,
+    ].join("\n");
+
+    const wordCount = text.split(/\s+/).filter((w) => w.length > 0).length;
+    trackCapture(url, title, domain, wordCount, "page");
+
+    await sendToTilth(fullText, domain, "page");
+  } catch (err) {
+    console.warn("[tilth-capture] Failed to capture page:", err.message);
+  }
 }
 
 /**

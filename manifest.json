@@ -6,9 +6,10 @@
   "permissions": [
     "activeTab",
     "storage",
-    "contextMenus"
+    "contextMenus",
+    "scripting"
   ],
-  "host_permissions": [],
+  "host_permissions": ["<all_urls>"],
   "background": {
     "service_worker": "src/background.js"
   },

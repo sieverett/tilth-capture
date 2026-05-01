@@ -95,10 +95,15 @@ async function init() {
     window.close();
   });
 
-  // Capture button
+  // Capture button — send to background, not content script
   document.getElementById("captureBtn").addEventListener("click", async () => {
     if (tab && tab.id) {
-      chrome.tabs.sendMessage(tab.id, { type: "capture-page" });
+      chrome.runtime.sendMessage({
+        type: "capture-page-request",
+        tabId: tab.id,
+        url: tab.url,
+        title: tab.title,
+      });
       window.close();
     }
   });
