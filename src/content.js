@@ -27,8 +27,12 @@ async function init() {
     ...((stored && stored.tilthCapture) || {}),
   };
 
-  if (!shouldRun()) return;
+  if (!shouldRun()) {
+    console.log("[tilth-capture] Not running on this page");
+    return;
+  }
 
+  console.log("[tilth-capture] Active on", window.location.hostname);
   setupDwellTracking();
   setupSelectionCapture();
 
@@ -105,7 +109,9 @@ function setupDwellTracking() {
   );
 
   // Observe content elements
-  document.querySelectorAll(CONTENT_SELECTORS).forEach((el) => {
+  const elements = document.querySelectorAll(CONTENT_SELECTORS);
+  console.log("[tilth-capture] Observing", elements.length, "elements");
+  elements.forEach((el) => {
     observer.observe(el);
   });
 

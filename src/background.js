@@ -10,6 +10,15 @@ const DEFAULTS = {
 };
 
 let settings = { ...DEFAULTS };
+const sentHashes = new Set(); // dedup: content hashes sent this service worker lifetime
+
+function quickHash(str) {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = ((hash << 5) - hash + str.charCodeAt(i)) | 0;
+  }
+  return hash.toString(36);
+}
 
 // Load settings on startup
 chrome.storage.sync.get("tilthCapture", (stored) => {
@@ -59,6 +68,14 @@ chrome.runtime.onMessage.addListener((msg, sender) => {
   if (msg.type !== "capture") return;
 
   const { text, url, title, domain, trigger, timestamp } = msg.payload;
+
+  // Dedup: hash the text, skip if already sent this session
+  const hash = quickHash(text);
+  if (sentHashes.has(hash)) {
+    console.log("[tilth-capture] Dedup: skipping duplicate content");
+    return;
+  }
+  sentHashes.add(hash);
 
   // Build the text with context
   const fullText = [
