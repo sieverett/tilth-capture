@@ -38,7 +38,10 @@ async function init() {
   }
 
   // Stats
-  document.getElementById("captureCount").textContent = count;
+  const sessionStored = await chrome.storage.session.get("captureStats");
+  const sessionStats = sessionStored.captureStats || { totalWords: 0, totalCaptures: 0 };
+  document.getElementById("captureCount").textContent =
+    `${sessionStats.totalCaptures} (${sessionStats.totalWords.toLocaleString()} words)`;
   document.getElementById("dwellThreshold").textContent =
     (settings.dwellThresholdMs / 1000) + "s";
 
@@ -98,6 +101,11 @@ async function init() {
       chrome.tabs.sendMessage(tab.id, { type: "capture-page" });
       window.close();
     }
+  });
+
+  // Stats button
+  document.getElementById("statsBtn").addEventListener("click", () => {
+    chrome.tabs.create({ url: chrome.runtime.getURL("src/stats.html") });
   });
 
   // Settings button

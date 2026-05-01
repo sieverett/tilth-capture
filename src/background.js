@@ -50,6 +50,17 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
 
 // Receive captures from content scripts
 chrome.runtime.onMessage.addListener((msg, sender) => {
+  if (msg.type === "get-stats") {
+    // Return stats to popup
+    chrome.storage.session.get("captureStats", (stored) => {
+      const stats = stored.captureStats || { pages: {}, sessionStart: Date.now() };
+      if (msg.callback) {
+        // Use sendResponse pattern
+      }
+    });
+    return;
+  }
+
   if (msg.type !== "capture") return;
 
   const { text, url, title, domain, trigger, timestamp } = msg.payload;
@@ -63,11 +74,50 @@ chrome.runtime.onMessage.addListener((msg, sender) => {
     text,
   ].join("\n");
 
+  // Track stats per page
+  const wordCount = text.split(/\s+/).filter((w) => w.length > 0).length;
+  trackCapture(url, title, domain, wordCount, trigger);
+
   // POST to tilth ingest gateway
   sendToTilth(fullText, domain, trigger).catch((err) => {
     console.warn("[tilth-capture] Failed to send:", err.message);
   });
 });
+
+/**
+ * Track capture stats per page for the current session.
+ */
+async function trackCapture(url, title, domain, wordCount, trigger) {
+  const stored = await chrome.storage.session.get("captureStats");
+  const stats = stored.captureStats || {
+    pages: {},
+    totalWords: 0,
+    totalCaptures: 0,
+    sessionStart: Date.now(),
+  };
+
+  const pageKey = url;
+  if (!stats.pages[pageKey]) {
+    stats.pages[pageKey] = {
+      title: title,
+      domain: domain,
+      url: url,
+      words: 0,
+      captures: 0,
+      triggers: {},
+    };
+  }
+
+  const page = stats.pages[pageKey];
+  page.words += wordCount;
+  page.captures += 1;
+  page.triggers[trigger] = (page.triggers[trigger] || 0) + 1;
+
+  stats.totalWords += wordCount;
+  stats.totalCaptures += 1;
+
+  await chrome.storage.session.set({ captureStats: stats });
+}
 
 /**
  * Send content to the tilth ingest gateway.
