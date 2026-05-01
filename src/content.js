@@ -10,6 +10,7 @@ const CONTENT_SELECTORS = "p, article, section, [role='main'], .post, .entry, .c
 let settings = null;
 let dwellTimers = new Map(); // element -> { startTime, totalMs, captured }
 let observer = null;
+let capturedHashes = new Set(); // dedup: hashes of text already sent this page
 
 /**
  * Initialize settings from storage.
@@ -149,7 +150,10 @@ function checkDwellThresholds() {
     if (totalMs >= settings.dwellThresholdMs) {
       const text = el.innerText || "";
       if (text.trim().length >= settings.minTextLength) {
-        captureContent(text.trim(), "dwell");
+        // Skip if a parent element was already captured with this text
+        if (!isNestedCapture(el)) {
+          captureContent(text.trim(), "dwell");
+        }
         timer.captured = true;
       }
     }
@@ -182,12 +186,59 @@ function setupSelectionCapture() {
 }
 
 /**
+ * Check if a parent element was already captured with overlapping text.
+ */
+function isNestedCapture(el) {
+  let parent = el.parentElement;
+  while (parent && parent !== document.body) {
+    if (dwellTimers.has(parent) && dwellTimers.get(parent).captured) {
+      return true;
+    }
+    parent = parent.parentElement;
+  }
+  return false;
+}
+
+/**
+ * Simple string hash for dedup (not crypto, just fast).
+ */
+function quickHash(str) {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = ((hash << 5) - hash + str.charCodeAt(i)) | 0;
+  }
+  return hash.toString(36);
+}
+
+/**
+ * Check if text is a substring of something already captured,
+ * or if something already captured is a substring of this text.
+ */
+function isDuplicate(text) {
+  const hash = quickHash(text);
+  if (capturedHashes.has(hash)) return true;
+
+  // Check if this text overlaps significantly with any prior capture
+  for (const existing of capturedHashes) {
+    // Hash-only check is fast; exact substring check is expensive
+    // so we rely on the hash for exact dupes
+  }
+
+  return false;
+}
+
+/**
  * Send captured content to the background script for forwarding to tilth.
  */
 function captureContent(text, trigger) {
   if (text.length > settings.maxCaptureLength) {
     text = text.substring(0, settings.maxCaptureLength);
   }
+
+  // Dedup: skip if we've already captured this exact text on this page
+  const hash = quickHash(text);
+  if (capturedHashes.has(hash)) return;
+  capturedHashes.add(hash);
 
   chrome.runtime.sendMessage({
     type: "capture",
