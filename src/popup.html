@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body {
+      width: 300px;
+      padding: 16px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-size: 13px;
+      color: #333;
+    }
+    h2 {
+      margin: 0 0 12px;
+      font-size: 16px;
+      color: #1a1a1a;
+    }
+    .status {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+    .dot.active { background: #4CAF50; }
+    .dot.paused { background: #FF9800; }
+    .dot.off { background: #999; }
+    .stat {
+      display: flex;
+      justify-content: space-between;
+      padding: 4px 0;
+      border-bottom: 1px solid #eee;
+    }
+    .controls {
+      margin-top: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    button {
+      padding: 8px 12px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      background: #fff;
+      cursor: pointer;
+      font-size: 12px;
+    }
+    button:hover { background: #f5f5f5; }
+    button.primary {
+      background: #1a73e8;
+      color: white;
+      border-color: #1a73e8;
+    }
+    button.primary:hover { background: #1557b0; }
+    button.danger {
+      background: #d93025;
+      color: white;
+      border-color: #d93025;
+    }
+    button.danger:hover { background: #b3261e; }
+    .domain {
+      font-size: 11px;
+      color: #666;
+      margin-top: 8px;
+    }
+  </style>
+</head>
+<body>
+  <h2>Tilth Capture</h2>
+
+  <div class="status">
+    <div class="dot" id="statusDot"></div>
+    <span id="statusText"></span>
+  </div>
+
+  <div class="stat">
+    <span>Captures this session</span>
+    <span id="captureCount">0</span>
+  </div>
+  <div class="stat">
+    <span>Dwell threshold</span>
+    <span id="dwellThreshold">20s</span>
+  </div>
+  <div class="stat">
+    <span>Current domain</span>
+    <span id="currentDomain">—</span>
+  </div>
+
+  <div class="controls">
+    <button id="toggleBtn" class="primary">Pause (1 hour)</button>
+    <button id="captureBtn">Capture this page now</button>
+    <button id="settingsBtn">Settings</button>
+  </div>
+
+  <div class="domain" id="domainStatus"></div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
