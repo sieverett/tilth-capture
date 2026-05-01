@@ -194,10 +194,9 @@ async function sendToTilth(text, domain, trigger) {
     throw new Error(`Gateway returned ${resp.status}`);
   }
 
-  // Update badge to show capture count
-  const stored = await chrome.storage.local.get("captureCount");
-  const count = (stored.captureCount || 0) + 1;
-  await chrome.storage.local.set({ captureCount: count });
-  chrome.action.setBadgeText({ text: String(count) });
+  // Update badge from session stats
+  const sessionStored = await chrome.storage.session.get("captureStats");
+  const stats = sessionStored.captureStats || { totalCaptures: 0 };
+  chrome.action.setBadgeText({ text: String(stats.totalCaptures) });
   chrome.action.setBadgeBackgroundColor({ color: "#4CAF50" });
 }
