@@ -117,3 +117,10 @@ document.getElementById("resetBtn").addEventListener("click", async () => {
 });
 
 loadStats();
+
+// Auto-refresh when new captures arrive
+chrome.storage.onChanged.addListener((changes, area) => {
+  if (area === "session" && changes.captureStats) {
+    loadStats();
+  }
+});
