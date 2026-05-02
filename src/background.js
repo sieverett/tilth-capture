@@ -20,6 +20,18 @@ function quickHash(str) {
   return hash.toString(36);
 }
 
+// Device ID — generated once on first install, persists forever
+let deviceId = "";
+chrome.storage.local.get("tilthDeviceId", (stored) => {
+  if (stored.tilthDeviceId) {
+    deviceId = stored.tilthDeviceId;
+  } else {
+    deviceId = crypto.randomUUID();
+    chrome.storage.local.set({ tilthDeviceId: deviceId });
+    console.log("[tilth-capture] Generated device ID:", deviceId);
+  }
+});
+
 // Load settings on startup
 chrome.storage.sync.get("tilthCapture", (stored) => {
   settings = { ...DEFAULTS, ...(stored.tilthCapture || {}) };
@@ -189,6 +201,7 @@ async function sendToTilth(text, domain, trigger) {
     metadata: {
       env: "prod",
       subject_id: domain,
+      trace_id: deviceId,
     },
   };
 
