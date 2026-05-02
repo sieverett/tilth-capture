@@ -56,14 +56,26 @@ async function init() {
       const domain = url.hostname;
       document.getElementById("currentDomain").textContent = domain;
 
+      const matchesDomain = (list) =>
+        (list || []).some((d) => domain === d || domain.endsWith("." + d));
+
+      const isBlocked = matchesDomain(settings.blockedDomains);
       const isAllowed =
-        settings.allowedDomains.length === 0 ||
-        settings.allowedDomains.some(
-          (d) => domain === d || domain.endsWith("." + d)
-        );
-      document.getElementById("domainStatus").textContent = isAllowed
-        ? "This domain is being captured"
-        : "This domain is not in the allowlist";
+        !isBlocked &&
+        (settings.allowedDomains.length === 0 ||
+          matchesDomain(settings.allowedDomains));
+
+      const statusEl = document.getElementById("domainStatus");
+      if (isBlocked) {
+        statusEl.textContent = "This domain is blocked";
+        statusEl.style.color = "#d93025";
+      } else if (isAllowed) {
+        statusEl.textContent = "This domain is being captured";
+        statusEl.style.color = "#137333";
+      } else {
+        statusEl.textContent = "This domain is not in the allowlist";
+        statusEl.style.color = "#666";
+      }
     } catch {
       document.getElementById("currentDomain").textContent = "—";
     }

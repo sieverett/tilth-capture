@@ -9,6 +9,7 @@ const DEFAULTS = {
   dwellThresholdMs: 20000,
   enabled: true,
   allowedDomains: [],
+  blockedDomains: [],
 };
 
 async function loadSettings() {
@@ -22,16 +23,20 @@ async function loadSettings() {
     settings.dwellThresholdMs / 1000;
   document.getElementById("enabled").checked = settings.enabled;
   document.getElementById("allowedDomains").value =
-    settings.allowedDomains.join("\n");
+    (settings.allowedDomains || []).join("\n");
+  document.getElementById("blockedDomains").value =
+    (settings.blockedDomains || []).join("\n");
 }
 
-async function saveSettings() {
-  const domains = document
-    .getElementById("allowedDomains")
+function parseDomainList(id) {
+  return document
+    .getElementById(id)
     .value.split("\n")
     .map((d) => d.trim())
     .filter((d) => d.length > 0);
+}
 
+async function saveSettings() {
   const settings = {
     gatewayUrl: document.getElementById("gatewayUrl").value.trim(),
     identity: document.getElementById("identity").value.trim(),
@@ -39,7 +44,8 @@ async function saveSettings() {
     dwellThresholdMs:
       parseInt(document.getElementById("dwellThreshold").value, 10) * 1000,
     enabled: document.getElementById("enabled").checked,
-    allowedDomains: domains,
+    allowedDomains: parseDomainList("allowedDomains"),
+    blockedDomains: parseDomainList("blockedDomains"),
   };
 
   await chrome.storage.sync.set({ tilthCapture: settings });

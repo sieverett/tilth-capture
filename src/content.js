@@ -23,6 +23,7 @@ async function init() {
     maxCaptureLength: 256 * 1024,
     enabled: true,
     allowedDomains: [],
+    blockedDomains: [],
     pausedUntil: null,
     ...((stored && stored.tilthCapture) || {}),
   };
@@ -58,11 +59,19 @@ function shouldRun() {
 
   if (settings.pausedUntil && Date.now() < settings.pausedUntil) return false;
 
+  const hostname = window.location.hostname;
+
+  const matchesDomain = (list) =>
+    list.some((d) => hostname === d || hostname.endsWith("." + d));
+
+  // Blocked always wins
+  if (settings.blockedDomains.length > 0 && matchesDomain(settings.blockedDomains)) {
+    return false;
+  }
+
+  // If allowlist has entries, only those domains run
   if (settings.allowedDomains.length > 0) {
-    const hostname = window.location.hostname;
-    return settings.allowedDomains.some(
-      (d) => hostname === d || hostname.endsWith("." + d)
-    );
+    return matchesDomain(settings.allowedDomains);
   }
 
   return true;

@@ -3,7 +3,7 @@
 <head>
   <style>
     body {
-      max-width: 600px;
+      max-width: 700px;
       margin: 40px auto;
       padding: 0 20px;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
@@ -45,6 +45,38 @@
       align-items: center;
       gap: 8px;
     }
+    .domain-columns {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+    .domain-col textarea {
+      width: 100%;
+      box-sizing: border-box;
+    }
+    .domain-col.allow {
+      border-left: 3px solid #4CAF50;
+      padding-left: 12px;
+    }
+    .domain-col.block {
+      border-left: 3px solid #d93025;
+      padding-left: 12px;
+    }
+    .domain-col label {
+      font-weight: 600;
+    }
+    .domain-col.allow label { color: #137333; }
+    .domain-col.block label { color: #d93025; }
+    .info-box {
+      background: #f5f7fa;
+      border-radius: 6px;
+      padding: 12px 14px;
+      font-size: 12px;
+      color: #555;
+      margin-top: 12px;
+      line-height: 1.5;
+    }
+    .info-box strong { color: #333; }
   </style>
 </head>
 <body>
@@ -74,14 +106,26 @@
     <div class="hint">How long content must be visible before auto-capture. Lower = more captures.</div>
   </div>
 
-  <h2>Domain Allowlist</h2>
-  <div class="field">
-    <label for="allowedDomains">Allowed domains (one per line)</label>
-    <textarea id="allowedDomains" rows="6" placeholder="docs.google.com&#10;github.com&#10;notion.so"></textarea>
-    <div class="hint">Leave empty to capture from all sites. Add domains to restrict.</div>
+  <h2>Domain Filtering</h2>
+  <div class="domain-columns">
+    <div class="domain-col allow">
+      <label for="allowedDomains">Allowed</label>
+      <textarea id="allowedDomains" rows="6" placeholder="docs.google.com&#10;github.com&#10;notion.so"></textarea>
+    </div>
+    <div class="domain-col block">
+      <label for="blockedDomains">Blocked</label>
+      <textarea id="blockedDomains" rows="6" placeholder="facebook.com&#10;twitter.com&#10;youtube.com"></textarea>
+    </div>
+  </div>
+  <div class="info-box">
+    <strong>How domain filtering works:</strong><br>
+    If the <strong>allowed</strong> list has entries, only those domains are captured. Everything else is ignored.<br>
+    If the allowed list is <strong>empty</strong>, all domains are captured <strong>except</strong> those in the blocked list.<br>
+    Subdomains match automatically &mdash; <code>google.com</code> matches <code>docs.google.com</code>.<br>
+    If a domain appears in both lists, blocked wins.
   </div>
 
-  <div class="field">
+  <div class="field" style="margin-top: 16px">
     <div class="toggle-row">
       <input type="checkbox" id="enabled">
       <label for="enabled" style="margin: 0">Capture enabled</label>
