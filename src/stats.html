@@ -42,10 +42,17 @@
     }
     .page-item {
       border-bottom: 1px solid #eee;
-      padding: 10px 0;
+      cursor: pointer;
+      user-select: none;
     }
     .page-item:last-child {
       border-bottom: none;
+    }
+    .page-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 0;
     }
     .page-title {
       font-weight: 500;
@@ -54,6 +61,20 @@
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+      flex: 1;
+      margin-right: 8px;
+    }
+    .page-words {
+      font-size: 11px;
+      color: #888;
+      white-space: nowrap;
+    }
+    .page-details {
+      display: none;
+      padding: 0 0 8px;
+    }
+    .page-details.open {
+      display: block;
     }
     .page-domain {
       font-size: 11px;
@@ -65,11 +86,6 @@
       margin-top: 4px;
       font-size: 12px;
       color: #555;
-    }
-    .page-stats span {
-      display: flex;
-      align-items: center;
-      gap: 3px;
     }
     .triggers {
       display: flex;
@@ -86,6 +102,15 @@
     .trigger-tag.dwell { background: #e6f4ea; color: #137333; }
     .trigger-tag.selection { background: #fef7e0; color: #b06000; }
     .trigger-tag.page { background: #f3e8fd; color: #7627bb; }
+    .chevron {
+      font-size: 10px;
+      color: #aaa;
+      transition: transform 0.15s;
+      margin-left: 4px;
+    }
+    .chevron.open {
+      transform: rotate(90deg);
+    }
     .empty {
       text-align: center;
       padding: 40px 0;

@@ -1,5 +1,6 @@
 /**
  * Stats page — shows capture statistics for the current session.
+ * Cards are one-line, collapsed by default, accordion behavior.
  */
 
 function formatNumber(n) {
@@ -22,7 +23,7 @@ function renderTriggerTags(triggers) {
   return Object.entries(triggers)
     .map(
       ([trigger, count]) =>
-        `<span class="trigger-tag ${trigger}">${trigger} ${count > 1 ? "×" + count : ""}</span>`
+        `<span class="trigger-tag ${trigger}">${trigger}${count > 1 ? " \u00d7" + count : ""}</span>`
     )
     .join("");
 }
@@ -38,12 +39,8 @@ async function loadStats() {
 
   // Summary
   const pageCount = Object.keys(stats.pages).length;
-  document.getElementById("totalWords").textContent = formatNumber(
-    stats.totalWords
-  );
-  document.getElementById("totalCaptures").textContent = formatNumber(
-    stats.totalCaptures
-  );
+  document.getElementById("totalWords").textContent = formatNumber(stats.totalWords);
+  document.getElementById("totalCaptures").textContent = formatNumber(stats.totalCaptures);
   document.getElementById("totalPages").textContent = formatNumber(pageCount);
 
   // Page list
@@ -61,19 +58,45 @@ async function loadStats() {
 
   pageList.innerHTML = pages
     .map(
-      (page) => `
-    <div class="page-item">
-      <div class="page-title" title="${page.title}">${page.title || page.url}</div>
-      <div class="page-domain">${page.domain}</div>
-      <div class="page-stats">
-        <span>${formatNumber(page.words)} words</span>
-        <span>${page.captures} capture${page.captures !== 1 ? "s" : ""}</span>
+      (page, i) => `
+    <div class="page-item" data-index="${i}">
+      <div class="page-header">
+        <span class="page-title" title="${page.title || page.url}">${page.title || page.url}</span>
+        <span class="page-words">${formatNumber(page.words)}w</span>
+        <span class="chevron" data-index="${i}">\u25B6</span>
       </div>
-      <div class="triggers">${renderTriggerTags(page.triggers)}</div>
+      <div class="page-details" data-index="${i}">
+        <div class="page-domain">${page.domain}</div>
+        <div class="page-stats">
+          <span>${page.captures} capture${page.captures !== 1 ? "s" : ""}</span>
+        </div>
+        <div class="triggers">${renderTriggerTags(page.triggers)}</div>
+      </div>
     </div>
   `
     )
     .join("");
+
+  // Accordion: click to expand, collapse others
+  pageList.addEventListener("click", (e) => {
+    const item = e.target.closest(".page-item");
+    if (!item) return;
+
+    const index = item.dataset.index;
+    const details = item.querySelector(".page-details");
+    const chevron = item.querySelector(".chevron");
+    const isOpen = details.classList.contains("open");
+
+    // Close all
+    pageList.querySelectorAll(".page-details").forEach((d) => d.classList.remove("open"));
+    pageList.querySelectorAll(".chevron").forEach((c) => c.classList.remove("open"));
+
+    // Toggle clicked
+    if (!isOpen) {
+      details.classList.add("open");
+      chevron.classList.add("open");
+    }
+  });
 
   // Session info
   document.getElementById("sessionInfo").textContent =
@@ -89,7 +112,6 @@ document.getElementById("resetBtn").addEventListener("click", async () => {
       sessionStart: Date.now(),
     },
   });
-  await chrome.storage.local.set({ captureCount: 0 });
   chrome.action.setBadgeText({ text: "" });
   loadStats();
 });
