@@ -186,17 +186,9 @@ function setupSelectionCapture() {
       if (selection.length > 0) {
         captureContent(selection, "selection");
       }
-    } else if (msg.type === "capture-page") {
-      const main =
-        document.querySelector("article") ||
-        document.querySelector("[role='main']") ||
-        document.querySelector("main") ||
-        document.body;
-      const text = main.innerText || "";
-      if (text.trim().length > 0) {
-        captureContent(text.trim(), "page");
-      }
     }
+    // Note: "capture-page" is handled by the background script
+    // via chrome.scripting.executeScript (works without content script)
   });
 }
 
